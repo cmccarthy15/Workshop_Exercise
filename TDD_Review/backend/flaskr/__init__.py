@@ -1,8 +1,7 @@
 import os
 from flask import Flask, request, abort, jsonify
-from flask_sqlalchemy import SQLAlchemy #, or_
+from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-import random
 
 from models import setup_db, Book
 
@@ -103,7 +102,6 @@ def create_app(test_config=None):
     try:
       if search:
         selection = Book.query.order_by(Book.id).filter(Book.title.ilike('%{}%'.format(search)))
-        #selection = Book.query.order_by(Book.id).filter(or_(Book.title.ilike('%{}%'.format(search)), Book.author.ilike('%{}%'.format(search))))
         current_books = paginate_books(request, selection)
 
         return jsonify({
@@ -111,6 +109,7 @@ def create_app(test_config=None):
           'books': current_books,
           'total_books': len(selection.all())
         })
+
       else: 
         book = Book(title=new_title, author=new_author, rating=new_rating)
         book.insert()
@@ -151,6 +150,14 @@ def create_app(test_config=None):
       "error": 400,
       "message": "bad request"
       }), 400
+
+  @app.errorhandler(405)
+  def not_found(error):
+    return jsonify({
+      "success": False, 
+      "error": 405,
+      "message": "method not allowed"
+      }), 405
   
   return app
 

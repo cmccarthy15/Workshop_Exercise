@@ -1,6 +1,6 @@
 import os
 from flask import Flask, request, abort, jsonify
-from flask_sqlalchemy import SQLAlchemy #, or_
+from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import random
 
@@ -63,6 +63,7 @@ def create_app(test_config=None):
 
       return jsonify({
         'success': True,
+        'id': book.id
       })
       
     except:

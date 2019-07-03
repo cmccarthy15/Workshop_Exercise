@@ -20,7 +20,7 @@ def setup_db(app, database_path=database_path):
     db.create_all()
 
 '''
-Movie
+Book
 
 '''
 class Book(db.Model):  
