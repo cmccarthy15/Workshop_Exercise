@@ -1,7 +1,6 @@
 import os
 import unittest
 import json
-from flask_sqlalchemy import SQLAlchemy
 
 from flaskr import create_app
 from models import setup_db, Book
@@ -14,7 +13,7 @@ class BookTestCase(unittest.TestCase):
         self.app = create_app()
         self.client = self.app.test_client
         self.database_name = "bookshelf_test"
-        self.database_path = "postgres://{}/{}".format('localhost:5432', self.database_name)
+        self.database_path = "postgres://{}:{}@{}/{}".format('postgres', 'postgres','localhost:5432', self.database_name)
         setup_db(self.app, self.database_path)
 
         self.new_book = {
@@ -22,13 +21,6 @@ class BookTestCase(unittest.TestCase):
             'author': 'Neil Gaiman',
             'rating': 5
         }
-
-        # binds the app to the current context
-        with self.app.app_context():
-            self.db = SQLAlchemy()
-            self.db.init_app(self.app)
-            # create all tables
-            self.db.create_all()
     
     def tearDown(self):
         """Executed after reach test"""
@@ -83,7 +75,7 @@ class BookTestCase(unittest.TestCase):
         self.assertEqual(book, None)
         
 
-    def test_404_if_book_does_not_exist(self):
+    def test_422_if_book_does_not_exist(self):
         res = self.client().delete('/books/1000')
         data = json.loads(res.data)
 
@@ -94,12 +86,20 @@ class BookTestCase(unittest.TestCase):
     def test_create_new_book(self):
         res = self.client().post('/books', json=self.new_book)
         data = json.loads(res.data)
-        pass
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['created'])
+        self.assertTrue(len(data['books']))
     
-    def test_422_if_book_creation_fails(self):
-        res = self.client().post('/books', json=self.new_book)
+    def test_405_if_book_creation_not_allowed(self):
+        res = self.client().post('/books/45', json=self.new_book)
         data = json.loads(res.data)
-        pass
+
+        self.assertEqual(res.status_code, 405)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'method not allowed')
+        
 
 
 # Make the tests conveniently executable
